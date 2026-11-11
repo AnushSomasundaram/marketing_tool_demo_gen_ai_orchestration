@@ -1,5 +1,9 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import AccessGate from '@/components/shared/AccessGate.vue'
+</script>
 
 <template>
-  <RouterView />
+  <AccessGate>
+    <RouterView />
+  </AccessGate>
 </template>

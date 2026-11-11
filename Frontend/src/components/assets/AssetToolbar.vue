@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import { Download, Eye, Loader2, Pencil, RefreshCw, Trash2 } from '@lucide/vue'
+import { Download, Eye, Loader2, Pencil, Trash2 } from '@lucide/vue'
 
-withDefaults(defineProps<{ regenerating?: boolean; downloading?: boolean }>(), {
-  regenerating: false,
+withDefaults(defineProps<{ downloading?: boolean }>(), {
   downloading: false,
 })
 
 defineEmits<{
   preview: []
   edit: []
-  regenerate: []
   download: []
   delete: []
 }>()
@@ -22,17 +20,6 @@ defineEmits<{
     </button>
     <button type="button" title="Edit caption" aria-label="Edit caption" class="flex size-7 items-center justify-center rounded-md text-white hover:bg-white/20" @click.stop="$emit('edit')">
       <Pencil class="size-3.5" />
-    </button>
-    <button
-      type="button"
-      title="Regenerate"
-      aria-label="Regenerate asset"
-      class="flex size-7 items-center justify-center rounded-md text-white hover:bg-white/20 disabled:opacity-60"
-      :disabled="regenerating"
-      @click.stop="$emit('regenerate')"
-    >
-      <Loader2 v-if="regenerating" class="size-3.5 animate-spin" />
-      <RefreshCw v-else class="size-3.5" />
     </button>
     <button
       type="button"

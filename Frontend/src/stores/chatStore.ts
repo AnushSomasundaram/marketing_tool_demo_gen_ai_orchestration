@@ -11,9 +11,17 @@ export const useChatStore = defineStore('chat', () => {
   const scope = ref<ChatScope>('campaign')
   const isSending = ref(false)
   const isAssistantTyping = ref(false)
+  // Bumped whenever something wants the composer focused (e.g. "Refine with
+  // AI" on an asset card) — ChatComposer watches this rather than owning a
+  // ref that outside callers would need direct access to.
+  const focusRequestId = ref(0)
 
   function setScope(next: ChatScope) {
     scope.value = next
+  }
+
+  function requestFocus() {
+    focusRequestId.value += 1
   }
 
   function addUserMessage(content: string): ChatMessage {
@@ -70,7 +78,9 @@ export const useChatStore = defineStore('chat', () => {
     scope,
     isSending,
     isAssistantTyping,
+    focusRequestId,
     setScope,
+    requestFocus,
     sendMessage,
     reset,
   }

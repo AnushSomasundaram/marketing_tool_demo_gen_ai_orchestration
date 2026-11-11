@@ -1,8 +1,9 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.background.recovery import run_startup_recovery
@@ -46,6 +47,22 @@ def create_app() -> FastAPI:
         version="0.1.0",
         lifespan=lifespan,
     )
+
+    # Registration order matters: Starlette treats the *last*-added middleware
+    # as outermost. CORS must be added last so it wraps the access-code check
+    # too — otherwise a 401 short-circuit from that check never reaches
+    # CORSMiddleware, the response goes out with no CORS headers at all, and
+    # the browser reports it as an opaque CORS failure instead of a 401.
+    @app.middleware("http")
+    async def require_access_code(request: Request, call_next):
+        # Preflight requests never carry custom headers — let CORS handle them.
+        if request.method == "OPTIONS" or not settings.access_code:
+            return await call_next(request)
+        if request.url.path == f"{settings.api_prefix}/health":
+            return await call_next(request)
+        if request.headers.get("x-access-code") != settings.access_code:
+            return JSONResponse(status_code=401, content={"detail": "Missing or invalid access code."})
+        return await call_next(request)
 
     app.add_middleware(
         CORSMiddleware,

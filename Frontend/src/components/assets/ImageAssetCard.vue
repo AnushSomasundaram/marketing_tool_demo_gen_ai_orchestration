@@ -57,11 +57,9 @@ const isBusy = computed(() => props.asset.status === 'processing' || props.asset
 
       <div class="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
         <AssetToolbar
-          :regenerating="campaignStore.assetIsRegenerating(asset.id)"
           :downloading="campaignStore.assetIsDownloading(asset.id)"
           @preview="emit('preview')"
           @edit="emit('select')"
-          @regenerate="emit('regenerate')"
           @download="emit('download')"
           @delete="emit('delete')"
         />

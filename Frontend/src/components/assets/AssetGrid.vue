@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useCampaignStore } from '@/stores/campaignStore'
+import { useChatStore } from '@/stores/chatStore'
 import { useUiStore } from '@/stores/uiStore'
 import type { CampaignAsset } from '@/types/campaign'
 import ImageAssetCard from './ImageAssetCard.vue'
@@ -9,6 +10,7 @@ import EmptyAssetsState from './EmptyAssetsState.vue'
 const props = defineProps<{ assets: CampaignAsset[] }>()
 
 const campaignStore = useCampaignStore()
+const chatStore = useChatStore()
 const uiStore = useUiStore()
 
 function handleDelete(asset: CampaignAsset) {
@@ -23,7 +25,13 @@ function handleDelete(asset: CampaignAsset) {
 
 function handleRefine(asset: CampaignAsset) {
   campaignStore.selectAsset(asset.id)
-  uiStore.pushToast('Selected asset — describe your refinement in the chat', 'info')
+  // "Refine with AI" only means anything once the chat is actually scoped to
+  // this one asset — leaving the scope on whatever it was before (e.g. the
+  // "Entire campaign" default) silently applies the next message everywhere.
+  chatStore.setScope('selected_asset')
+  uiStore.setMobileTab('create')
+  chatStore.requestFocus()
+  uiStore.pushToast(`Chat scoped to "${asset.title}" — describe your change below`, 'info')
 }
 </script>
 

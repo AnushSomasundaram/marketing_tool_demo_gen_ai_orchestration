@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     frontend_origins: str = "http://localhost:5173"
     max_upload_mb: int = 10
 
+    # When set, every /api request (except /api/health) must carry a matching
+    # X-Access-Code header. Empty disables the gate — used for local dev.
+    access_code: str = ""
+
     # Base URL this API is reachable at, used to build absolute URLs for
     # locally-stored files (e.g. http://localhost:8000/storage/...).
     public_base_url: str = "http://localhost:8000"

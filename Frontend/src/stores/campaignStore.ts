@@ -138,12 +138,30 @@ export const useCampaignStore = defineStore('campaign', () => {
     }
   }
 
+  /** Revisions always create a NEW asset id (immutable versioning) — if the
+   * selected asset was just superseded, its id no longer appears in `latest`
+   * at all, so a plain lookup would silently go null. Fall back to the same
+   * array position (assets keep a stable sort_order across revisions, same
+   * convention already used in regenerateAsset below) so selection follows
+   * the asset through its version history instead of quietly detaching —
+   * which otherwise both blanks the caption editor AND causes the next chat
+   * turn targeting "the selected asset" to reference a dead id and get
+   * silently dropped by the backend's scope validation. */
+  function reconcileSelectedAsset(latest: Campaign) {
+    if (!selectedAssetId.value || !campaign.value) return
+    if (latest.assets.some((a) => a.id === selectedAssetId.value)) return
+    const oldIndex = campaign.value.assets.findIndex((a) => a.id === selectedAssetId.value)
+    const replacement = oldIndex !== -1 ? latest.assets[oldIndex] : undefined
+    selectedAssetId.value = replacement?.id ?? null
+  }
+
   function startPolling() {
     stopPolling()
     pollTimer = setInterval(async () => {
       if (!campaign.value) return stopPolling()
       try {
         const latest = await campaignService.getCampaign(campaign.value.id)
+        reconcileSelectedAsset(latest)
         campaign.value = latest
         if (!IN_PROGRESS_CAMPAIGN_STATUSES.has(latest.status) && !hasInProgressAssets(latest)) {
           stopPolling()
@@ -193,6 +211,7 @@ export const useCampaignStore = defineStore('campaign', () => {
     isRegeneratingCampaign.value = true
     try {
       const updated = await campaignService.regenerateCampaign(campaign.value.id)
+      reconcileSelectedAsset(updated)
       campaign.value = updated
       startPolling()
       ui.pushToast('Regenerating the full campaign', 'success')
@@ -374,6 +393,7 @@ export const useCampaignStore = defineStore('campaign', () => {
     if (!campaign.value) return
     try {
       const latest = await campaignService.getCampaign(campaign.value.id)
+      reconcileSelectedAsset(latest)
       campaign.value = latest
       if (IN_PROGRESS_CAMPAIGN_STATUSES.has(latest.status) || hasInProgressAssets(latest)) {
         startPolling()

@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { nextTick, ref } from 'vue'
+import { nextTick, ref, watch } from 'vue'
 import { Send } from '@lucide/vue'
+import { useChatStore } from '@/stores/chatStore'
 
 const props = defineProps<{ disabled?: boolean }>()
 const emit = defineEmits<{ send: [content: string] }>()
 
+const chatStore = useChatStore()
 const draft = ref('')
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
+
+watch(
+  () => chatStore.focusRequestId,
+  () => nextTick(() => textareaRef.value?.focus()),
+)
 
 function resize() {
   const el = textareaRef.value
